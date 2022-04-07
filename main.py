@@ -23,7 +23,7 @@ alldates,alltitles = \
     wait_time=1, maxntries=10)
 Return all arXiv papers that match the query, up to max_results papers returned. 
 """
-def searchpager(search_query, max_results=500000, results_per_iteration=100,
+def searchpager(search_query, max_results=500000, results_per_iteration=500,
                 wait_time=1, maxntries=10):
     # Base api query url
     base_url = 'http://export.arxiv.org/api/query?'
@@ -58,6 +58,9 @@ def searchpager(search_query, max_results=500000, results_per_iteration=100,
             if len(feed.entries) > 0:
                 break
             time.sleep(wait_time)
+
+        if len(feed.entries) == 0:
+            print('Warning: ended with an empty list of papers, maybe just a connection problem?')
 
         # Run through each entry, and print out information
         for entry in feed.entries:
@@ -120,7 +123,7 @@ def plot(data,nbins=100):
 def main():
 
     savefile = 'image_vs_video.npz'
-    data = collect_data(loadfile=savefile)
+    data = collect_data(savefile=savefile)
     plot(data)
 
 if __name__ == '__main__':
