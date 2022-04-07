@@ -19,8 +19,8 @@ import matplotlib.pyplot as plt
 
 """
 alldates,alltitles = \
-searchpager(search_query, max_results=500000, results_per_iteration=100,
-            wait_time=1, maxntries=10)
+    searchpager(search_query, max_results=500000, results_per_iteration=100,
+    wait_time=1, maxntries=10)
 Return all arXiv papers that match the query, up to max_results papers returned. 
 """
 def searchpager(search_query, max_results=500000, results_per_iteration=100,
@@ -81,9 +81,9 @@ def searchpager(search_query, max_results=500000, results_per_iteration=100,
 
 def main():
 
-    imagequery = 'abs:image+AND+abs:learning'
+    imagequery = 'abs:image+AND+cat:cs.CV'
     imagedates,imagetitles = searchpager(imagequery)
-    videoquery = 'abs:video+AND+abs:learning'
+    videoquery = 'abs:video+AND+cat:cs.CV'
     videodates,videotitles = searchpager(videoquery)
 
     nbins = 50
@@ -94,6 +94,7 @@ def main():
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m.%y'))
     ax.legend()
+    print(f'N. video: {len(videodates)}, n. image: {len(imagedates)}')
     plt.show()
 
 if __name__ == '__main__':
