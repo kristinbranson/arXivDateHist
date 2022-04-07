@@ -95,8 +95,11 @@ def collect_data(loadfile=None,savefile=None):
             np.savez(savefile,queries=queries,dates=dates,titles=titles)
         return {'dates': dates, 'titles': titles, 'queries': queries}
     else:
-        data = np.load(loadfile)
-        return data
+        data = np.load(loadfile,allow_pickle=True)
+        datadict = {}
+        for key in list(data.keys()):
+            datadict[key] = data[key].item()
+        return datadict
 
 def plot(data,nbins=100):
     datesn = []
@@ -108,6 +111,8 @@ def plot(data,nbins=100):
     ax.hist(datesn,nbins,density=False,label=list(data['dates'].keys()))
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m.%y'))
+    ax.set_xlabel('Date')
+    ax.set_ylabel('N. papers')
     ax.legend()
     plt.show()
 
@@ -115,7 +120,7 @@ def plot(data,nbins=100):
 def main():
 
     savefile = 'image_vs_video.npz'
-    data = collect_data(savefile=savefile)
+    data = collect_data(loadfile=savefile)
     plot(data)
 
 if __name__ == '__main__':
