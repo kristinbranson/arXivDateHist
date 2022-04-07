@@ -47,7 +47,11 @@ def searchpager(search_query, max_results=500000, results_per_iteration=100,
         for tryn in range(maxntries):
 
             # perform a GET request using the base_url and query
-            response = urllib.request.urlopen(base_url + query).read()
+            try:
+                response = urllib.request.urlopen(base_url + query).read()
+            except:
+                time.sleep(wait_time)
+                continue
 
             # parse the response using feedparser
             feed = feedparser.parse(response)
@@ -57,9 +61,9 @@ def searchpager(search_query, max_results=500000, results_per_iteration=100,
 
         # Run through each entry, and print out information
         for entry in feed.entries:
-            print('arxiv-id: %s'%entry.id.split('/abs/')[-1])
-            print('Title:  %s'%entry.title)
-            print(f'Date: {entry.published}')
+            #print('arxiv-id: %s'%entry.id.split('/abs/')[-1])
+            #print('Title:  %s'%entry.title)
+            #print(f'Date: {entry.published}')
             date = datetime.datetime.strptime(entry.published, '%Y-%m-%dT%H:%M:%SZ')
             alldates.append(date)
             alltitles.append(entry.title)
@@ -79,23 +83,40 @@ def searchpager(search_query, max_results=500000, results_per_iteration=100,
     print(f'Found {nentries} entries total')
     return alldates,alltitles
 
-def main():
+def collect_data(loadfile=None,savefile=None):
+    queries = {'Image': '%28abs:image+OR+abs:images%29+AND+%28cat:cs.CV+OR+cat:cs.LG%29',
+               'Video': '%28abs:video+OR+abs:videos%29+AND+%28cat:cs.CV+OR+cat:cs.LG%29'}
+    dates = {}
+    titles = {}
+    if loadfile is None:
+        for key,query in queries.items():
+            dates[key],titles[key] = searchpager(query)
+        if savefile is not None:
+            np.savez(savefile,queries=queries,dates=dates,titles=titles)
+        return {'dates': dates, 'titles': titles, 'queries': queries}
+    else:
+        data = np.load(loadfile)
+        return data
 
-    imagequery = 'abs:image+AND+cat:cs.CV'
-    imagedates,imagetitles = searchpager(imagequery)
-    videoquery = 'abs:video+AND+cat:cs.CV'
-    videodates,videotitles = searchpager(videoquery)
+def plot(data,nbins=100):
+    datesn = []
+    for key,val in data['dates'].items():
+        datesn.append(mdates.date2num(np.array(val)))
+        print(f'N. {key}: {len(val)}')
 
-    nbins = 50
-    videodatesn = mdates.date2num(np.array(videodates))
-    imagedatesn = mdates.date2num(np.array(imagedates))
     fig, ax = plt.subplots(1, 1)
-    ax.hist([videodatesn,imagedatesn],nbins,density=False,label=['Video','Image'])
+    ax.hist(datesn,nbins,density=False,label=list(data['dates'].keys()))
     ax.xaxis.set_major_locator(mdates.YearLocator())
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m.%y'))
     ax.legend()
-    print(f'N. video: {len(videodates)}, n. image: {len(imagedates)}')
     plt.show()
+
+
+def main():
+
+    savefile = 'image_vs_video.npz'
+    data = collect_data(savefile=savefile)
+    plot(data)
 
 if __name__ == '__main__':
     main()
